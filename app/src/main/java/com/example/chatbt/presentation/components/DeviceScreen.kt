@@ -16,14 +16,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.chatbt.domain.chat.BluetoothDevice
+import com.example.chatbt.domain.chat.BluetoothDeviceDomain
 import com.example.chatbt.presentation.BluetoothUiState
 
 @Composable
 fun DeviceScreen(
     state: BluetoothUiState,
     onStartScan: () -> Unit,
-    onStopScan: () -> Unit
+    onStopScan: () -> Unit,
+    onStartServer: () -> Unit,
+    onDeviceClicked: (BluetoothDeviceDomain) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -32,7 +34,7 @@ fun DeviceScreen(
         BluetoothDeviceList(
             pairedDevices = state.pairedDevices,
             scannedDevices = state.scannedDevices,
-            onClick = {},
+            onClick = onDeviceClicked,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
@@ -47,15 +49,18 @@ fun DeviceScreen(
             Button(onClick = onStopScan) {
                 Text(text = "Stop scan")
             }
+            Button(onClick = onStartServer) {
+                Text(text = "Start server")
+            }
         }
     }
 }
 
 @Composable
 fun BluetoothDeviceList(
-    pairedDevices: List<BluetoothDevice>,
-    scannedDevices: List<BluetoothDevice>,
-    onClick: (BluetoothDevice) -> Unit,
+    pairedDevices: List<BluetoothDeviceDomain>,
+    scannedDevices: List<BluetoothDeviceDomain>,
+    onClick: (BluetoothDeviceDomain) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
