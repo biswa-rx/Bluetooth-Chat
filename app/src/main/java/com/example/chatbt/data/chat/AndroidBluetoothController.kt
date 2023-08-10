@@ -12,7 +12,9 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import com.example.chatbt.domain.chat.BluetoothController
 import com.example.chatbt.domain.chat.BluetoothDeviceDomain
+import com.example.chatbt.domain.chat.BluetoothMessage
 import com.example.chatbt.domain.chat.ConnectionResult
+import com.example.chatbt.domain.chat.toByteArray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -22,8 +24,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,6 +47,7 @@ class AndroidBluetoothController(
     }
 
 
+    private var dataTransferService: BluetoothDataTransferService? = null
 
     private val _scannedDevices = MutableStateFlow<List<BluetoothDeviceDomain>>(emptyList())
     override val scannedDevices: StateFlow<List<BluetoothDeviceDomain>>
@@ -136,11 +141,20 @@ class AndroidBluetoothController(
                     shouldLoop = false
                     null
                 }
-//                if(currentClientSocket!= null) {
+                if(currentClientSocket!= null) {
                     emit(ConnectionResult.ConnectionEstablished)
-//                }
+                }
                 currentClientSocket?.let {
                     currentServerSocket?.close() // We care about connect, with we care about chatting, we don't care about server socket any more
+                    val service = BluetoothDataTransferService(it)
+                    dataTransferService = service
+                    emitAll(
+                        service
+                            .listenForIncomingMessages() // This Flow keep the connection alive till both device is stay in chat as long as any device close the connection
+                            .map { message ->
+                                ConnectionResult.TransferSucceeded(message)
+                            }
+                    )
                 }
             }
         }.onCompletion {
@@ -167,11 +181,20 @@ class AndroidBluetoothController(
 
             stopDiscovery()
 
-
             currentClientSocket?.let { bluetoothSocket ->
                 try {
                     bluetoothSocket.connect()
                     emit(ConnectionResult.ConnectionEstablished)
+
+                    BluetoothDataTransferService(bluetoothSocket).also {
+                        dataTransferService = it
+                        emitAll(
+                            it.listenForIncomingMessages()
+                                .map { message ->
+                                    ConnectionResult.TransferSucceeded(message)
+                                }
+                        )
+                    }
                 }catch (e: IOException) {
                     bluetoothSocket.close()
                     currentClientSocket = null
@@ -181,6 +204,23 @@ class AndroidBluetoothController(
         }.onCompletion {
             closeConnection()
         }.flowOn(Dispatchers.IO)
+    }
+
+    override suspend fun trySendMessage(message: String): BluetoothMessage? {
+        if(!hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+            return null
+        }
+        if(dataTransferService == null) {
+            return null
+        }
+
+        val bluetoothMessage = BluetoothMessage(
+            message = message,
+            senderName = bluetoothAdapter?.name?:"Unknown device",
+            isFromLocalUser = true
+        )
+        dataTransferService?.sendMessage(bluetoothMessage.toByteArray())
+        return bluetoothMessage
     }
 
     override fun closeConnection() {
