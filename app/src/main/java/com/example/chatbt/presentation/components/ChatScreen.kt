@@ -1,5 +1,6 @@
 package com.example.chatbt.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,11 +22,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.example.chatbt.presentation.BluetoothUiState
+import com.example.chatbt.ui.theme.DarkSlateGreyLight
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ChatScreen(
     state: BluetoothUiState,
@@ -35,11 +39,12 @@ fun ChatScreen(
     val message = rememberSaveable {
         mutableStateOf("")
     }
-//    val keyboardController = LocalSoftwareKeyboardController.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(color = DarkSlateGreyLight)
     ) {
         Row(
             modifier = Modifier
@@ -96,7 +101,7 @@ fun ChatScreen(
             IconButton(onClick = {
                 onSendMessage(message.value)
                 message.value = ""
-//                keyboardController?.hide()
+                keyboardController?.hide()
             }) {
                 Icon(
                     imageVector = Icons.Default.Send,
