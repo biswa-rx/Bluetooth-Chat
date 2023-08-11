@@ -9,7 +9,7 @@ Bluetooth Chating application build with clean architecture
      <td>Home</td>
   </tr>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/biswa-rx/Bluetooth-Chat/master/app/src/main/res/drawable/chat.jpg" width=500 height=900></td>
-    <td><img src="https://raw.githubusercontent.com/biswa-rx/Bluetooth-Chat/master/app/src/main/res/drawable/home.jpg" width=500 height=900></td>
+    <td><img src="https://raw.githubusercontent.com/biswa-rx/Bluetooth-Chat/master/app/src/main/res/drawable/chat.jpg" width=500 height=1000></td>
+    <td><img src="https://raw.githubusercontent.com/biswa-rx/Bluetooth-Chat/master/app/src/main/res/drawable/home.jpg" width=500 height=1000></td>
   </tr>
  </table>
